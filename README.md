@@ -1,13 +1,17 @@
 # Decentagram: Highly-Available Decentralized Publish/Subscribe Systems
 
 This is the archival repository for the source code of Decentagram submitted to
-Artifact Evaluation (AE) of DSN 2024.
+[Artifact Evaluation (AE) of DSN 2024](https://dsn2024uq.github.io/cfartifacts.html).
 The repository with DOI assigned made for the AE submission is available at:
 [https://doi.org/10.5281/zenodo.10224298](https://doi.org/10.5281/zenodo.10224298)
 
 Please note that this is an archival repository.
 Therefore, the source code stored **here is not being actively maintained**.
 **For links to the actively maintained repositories, please read below**.
+
+## AE Badges assigned
+
+**Code Reproducible** (subsumes both the “Reviewed” and “Available” badges)
 
 ## Directory Structure
 
