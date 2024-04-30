@@ -1,0 +1,16 @@
+{
+	"contractModuleMap": {
+		"PubSubService"             : "../libs/PubSub/build/PubSub",
+		"IASRootCertMgr"            : "../libs/RA/build/contracts",
+		"IASReportCertMgr"          : "../libs/RA/build/contracts",
+		"DecentServerCertMgr"       : "../libs/RA/build/contracts",
+		"RevokerByVoting"           : "EnclaveRevoker",
+		"RevokerByConflictMsg"      : "EnclaveRevoker",
+		"RevokerByLeakedKey"        : "EnclaveRevoker",
+		"KeyRevokerByVoting"        : "KeyRevoker",
+		"KeyRevokerByConflictMsg"   : "KeyRevoker",
+		"KeyRevokerByLeakedKey"     : "KeyRevoker"
+	},
+	"releaseUrl": "",
+	"buildDir"  : "build"
+}

@@ -1,0 +1,64 @@
+// Copyright (c) 2022 DecentEnclave
+// Use of this source code is governed by an MIT-style
+// license that can be found in the LICENSE file or at
+// https://opensource.org/licenses/MIT.
+
+enclave
+{
+	untrusted
+	{
+		/* define OCALLs here. */
+
+		void ocall_decent_enclave_print_str([in, string] const char* str);
+
+		void ocall_decent_untrusted_buffer_delete(
+			uint8_t data_type,
+			[user_check] void* ptr
+		);
+
+		uint64_t ocall_decent_untrusted_timestamp();
+
+
+		/* untrusted files */
+
+		sgx_status_t ocall_decent_untrusted_file_open(
+			[out] void** ptr,
+			[in, string] const char* path,
+			[in, string] const char* mode
+		);
+
+		void ocall_decent_untrusted_file_close(
+			[user_check] void* ptr
+		);
+
+		sgx_status_t ocall_decent_untrusted_file_seek(
+			[user_check] void* ptr,
+			ptrdiff_t offset,
+			uint8_t whence
+		);
+
+		sgx_status_t ocall_decent_untrusted_file_tell(
+			[user_check] const void* ptr,
+			[out] size_t* out_val
+		);
+
+		sgx_status_t ocall_decent_untrusted_file_flush(
+			[user_check] void* ptr
+		);
+
+		sgx_status_t ocall_decent_untrusted_file_read(
+			[user_check] void* ptr,
+			size_t size,
+			[out] uint8_t** out_buf,
+			[out] size_t* out_buf_size
+		);
+
+		sgx_status_t ocall_decent_untrusted_file_write(
+			[user_check] void* ptr,
+			[in, size=in_buf_size] const uint8_t* in_buf,
+			size_t in_buf_size,
+			[out] size_t* out_size
+		);
+
+	}; // untrusted
+}; // enclave

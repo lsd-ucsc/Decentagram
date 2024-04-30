@@ -1,0 +1,132 @@
+--- Asn1Decode.5c2d1469fc678513753786acb441e597969192ec.sol	2023-05-10 18:54:03.224133752 -0700
++++ Asn1Decode.sol	2023-05-10 18:14:14.998486467 -0700
+@@ -1,6 +1,7 @@
+-pragma solidity  ^0.5.2;
++// SPDX-License-Identifier: MIT
++pragma solidity >=0.5.2 <0.9.0;
+ 
+-import "@ensdomains/dnssec-oracle/contracts/BytesUtils.sol";
++import {BytesUtils} from "../../libs/ens-contracts/BytesUtils.sol";
+ 
+ library NodePtr {
+   // Unpack first byte index
+@@ -23,9 +24,28 @@
+   }
+ }
+ 
++
++library substringProxy {
++  using BytesUtils for bytes;
++
++  function substring(
++    bytes memory self,
++    uint offset,
++    uint len
++  )
++    internal
++    pure
++    returns(bytes memory)
++  {
++    return self.substringUnsafe(offset, len);
++  }
++}
++
++
+ library Asn1Decode {
+   using NodePtr for uint;
+   using BytesUtils for bytes;
++  using substringProxy for bytes;
+ 
+   /*
+    * @dev Get the root node. First step in traversing an ASN1 structure
+@@ -33,7 +53,7 @@
+    * @return A pointer to the outermost node
+    */
+   function root(bytes memory der) internal pure returns (uint) {
+-  	return readNodeLength(der, 0);
++    return readNodeLength(der, 0);
+   }
+ 
+   /*
+@@ -63,7 +83,7 @@
+    * @return A pointer to the next sibling node
+    */
+   function nextSiblingOf(bytes memory der, uint ptr) internal pure returns (uint) {
+-  	return readNodeLength(der, ptr.ixl()+1);
++    return readNodeLength(der, ptr.ixl()+1);
+   }
+ 
+   /*
+@@ -73,8 +93,8 @@
+    * @return A pointer to the first child node
+    */
+   function firstChildOf(bytes memory der, uint ptr) internal pure returns (uint) {
+-  	require(der[ptr.ixs()] & 0x20 == 0x20, "Not a constructed type");
+-  	return readNodeLength(der, ptr.ixf());
++    require(der[ptr.ixs()] & 0x20 == 0x20, "Not a constructed type");
++    return readNodeLength(der, ptr.ixf());
+   }
+ 
+   /*
+@@ -84,7 +104,7 @@
+    * @return True iff j is child of i or i is child of j.
+    */
+   function isChildOf(uint i, uint j) internal pure returns (bool) {
+-  	return ( ((i.ixf() <= j.ixs()) && (j.ixl() <= i.ixl())) ||
++    return ( ((i.ixf() <= j.ixs()) && (j.ixl() <= i.ixl())) ||
+              ((j.ixf() <= i.ixs()) && (i.ixl() <= j.ixl())) );
+   }
+ 
+@@ -98,6 +118,11 @@
+     return der.substring(ptr.ixf(), ptr.ixl()+1 - ptr.ixf());
+   }
+ 
++  function stringAt(bytes memory der, uint ptr) internal pure returns (string memory) {
++    return der.substrstringFast(ptr.ixf(), ptr.ixl()+1 - ptr.ixf());
++  }
++
++
+   /*
+    * @dev Extract entire node from DER-encoded structure
+    * @param der The DER-encoded ASN1 structure
+@@ -141,10 +166,12 @@
+     require(der[ptr.ixs()] == 0x02, "Not type INTEGER");
+     require(der[ptr.ixf()] & 0x80 == 0, "Not positive");
+     uint valueLength = ptr.ixl()+1 - ptr.ixf();
+-    if (der[ptr.ixf()] == 0)
++    if (der[ptr.ixf()] == 0) {
+       return der.substring(ptr.ixf()+1, valueLength-1);
+-    else
++    }
++    else {
+       return der.substring(ptr.ixf(), valueLength);
++    }
+   }
+ 
+   function keccakOfBytesAt(bytes memory der, uint ptr) internal pure returns (bytes32) {
+@@ -173,10 +200,10 @@
+     uint length;
+     uint80 ixFirstContentByte;
+     uint80 ixLastContentByte;
+-  	if ((der[ix+1] & 0x80) == 0) {
+-  		length = uint8(der[ix+1]);
+-  		ixFirstContentByte = uint80(ix+2);
+-  		ixLastContentByte = uint80(ixFirstContentByte + length -1);
++    if ((der[ix+1] & 0x80) == 0) {
++      length = uint8(der[ix+1]);
++      ixFirstContentByte = uint80(ix+2);
++      ixLastContentByte = uint80(ixFirstContentByte + length -1);
+     } else {
+       uint8 lengthbytesLength = uint8(der[ix+1] & 0x7F);
+       if (lengthbytesLength == 1)
+@@ -185,8 +212,8 @@
+         length = der.readUint16(ix+2);
+       else
+         length = uint(der.readBytesN(ix+2, lengthbytesLength) >> (32-lengthbytesLength)*8);
+-  		ixFirstContentByte = uint80(ix+2+lengthbytesLength);
+-  		ixLastContentByte = uint80(ixFirstContentByte + length -1);
++      ixFirstContentByte = uint80(ix+2+lengthbytesLength);
++      ixLastContentByte = uint80(ixFirstContentByte + length -1);
+     }
+     return NodePtr.getPtr(ix, ixFirstContentByte, ixLastContentByte);
+   }

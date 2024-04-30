@@ -1,0 +1,39 @@
+--- include/mbedTLScpp/mbedtls-headers/mbedtls_config.h	2022-10-25 21:05:21.979558746 -0700
++++ include/mbedTLScpp/mbedtls-headers/normal/mbedtlscpp_config.h	2022-11-03 02:12:28.907539150 -0700
+@@ -1272,6 +1272,8 @@
+  *
+  * Enable the checkup functions (*_self_test).
+  */
++// Have to enable this as long as MBEDTLS_FS_IO is enabled, due to
++// a macro misconfiguration in ctr_drbg.c
+ #define MBEDTLS_SELF_TEST
+ 
+ /**
+@@ -1743,7 +1745,7 @@
+  *
+  * Uncomment this to allow your own alternate threading implementation.
+  */
+-//#define MBEDTLS_THREADING_ALT
++#define MBEDTLS_THREADING_ALT
+ 
+ /**
+  * \def MBEDTLS_THREADING_PTHREAD
+@@ -2227,7 +2229,9 @@
+  *
+  * This module provides debugging functions.
+  */
++#ifndef NDEBUG
+ #define MBEDTLS_DEBUG_C
++#endif // !DEBUG
+ 
+ /**
+  * \def MBEDTLS_DES_C
+@@ -3056,7 +3060,7 @@
+  *
+  * Enable this layer to allow use of mutexes within mbed TLS
+  */
+-//#define MBEDTLS_THREADING_C
++#define MBEDTLS_THREADING_C
+ 
+ /**
+  * \def MBEDTLS_TIMING_C

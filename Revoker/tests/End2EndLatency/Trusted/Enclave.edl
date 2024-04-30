@@ -1,0 +1,26 @@
+// Copyright (c) 2023 Decentagram
+// Use of this source code is governed by an MIT-style
+// license that can be found in the LICENSE file or at
+// https://opensource.org/licenses/MIT.
+
+enclave
+{
+	from "sgx_tstdc.edl" import *;
+
+	from "DecentEnclave/SgxEDL/decent_common.edl" import *;
+	from "DecentEnclave/SgxEDL/net_io.edl" import *;
+	from "DecentEnclave/SgxEDL/sys_io.edl" import *;
+
+	trusted
+	{
+		/* define ECALLs here. */
+
+		public sgx_status_t ecall_decent_end2end_lat_init(
+			[in, size=20] const uint8_t* pubsub_addr,
+			[in, size=20] const uint8_t* pub_addr,
+			[in, size=20] const uint8_t* sub_addr
+		);
+
+	}; // trusted
+
+}; // enclave

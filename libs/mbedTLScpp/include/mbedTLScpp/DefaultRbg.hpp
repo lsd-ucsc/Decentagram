@@ -1,0 +1,20 @@
+#pragma once
+
+#ifndef MBEDTLSCPP_CUSTOMIZED_DEFAULT_RBG
+
+#include "CtrDrbg.hpp"
+
+#ifndef MBEDTLSCPP_CUSTOMIZED_NAMESPACE
+namespace mbedTLScpp
+#else
+namespace MBEDTLSCPP_CUSTOMIZED_NAMESPACE
+#endif
+{
+	using DefaultRbg = CtrDrbg<>;
+}
+
+#else // !MBEDTLSCPP_CUSTOMIZED_DEFAULT_RBG
+
+#include MBEDTLSCPP_CUSTOMIZED_DEFAULT_RBG
+
+#endif // !MBEDTLSCPP_CUSTOMIZED_DEFAULT_RBG

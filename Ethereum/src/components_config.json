@@ -1,0 +1,48 @@
+{
+	"EnclaveImage": {
+		"ImagePath": "libEthereumClient_trusted.signed.so",
+		"TokenPath": "EthereumClient_Enclave.token"
+	},
+	"AuthorizedComponents": {
+		"0000000000000000000000000000000000000000000000000000000000000000": {
+			"Name": "DecentServer",
+			"Endpoints": {
+				"Inst1": {
+					"IP": "127.0.0.1",
+					"Port": 10001,
+					"Incoming": false
+				}
+			}
+		},
+		"0000000000000000000000000000000000000000000000000000000000000001": {
+			"Name": "Revoker",
+			"Endpoints": {
+				"Inst1": {
+					"IP": "127.0.0.1",
+					"Port": 10002,
+					"Incoming": false
+				}
+			}
+		},
+		"0000000000000000000000000000000000000000000000000000000000000002": {
+			"Name": "EthereumClt",
+			"Endpoints": {
+				"Inst1": {
+					"IP": "0.0.0.0",
+					"Port": 10003,
+					"Incoming": true
+				}
+			}
+		}
+	},
+	"Geth": {
+		"Protocol": "http",
+		"Host": "localhost",
+		"Port": 8548,
+		"SyncAddr": "74Be867FBD89bC3507F145b36ba76cd0B1bF4f1A"
+	},
+	"PubSub": {
+		"StartBlock": 8875000,
+		"PubSubAddr": "5651231eA05C0478f60c13a7f5FE291657012C86"
+	}
+}

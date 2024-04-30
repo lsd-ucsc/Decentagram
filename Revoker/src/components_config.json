@@ -1,0 +1,41 @@
+{
+	"EnclaveImage": {
+		"ImagePath": "libRevoker_trusted.signed.so",
+		"TokenPath": "Revoker_Enclave.token"
+	},
+	"AuthorizedComponents": {
+		"0000000000000000000000000000000000000000000000000000000000000000": {
+			"Name": "DecentServer",
+			"Endpoints": {
+				"Inst1": {
+					"IP": "127.0.0.1",
+					"Port": 10001,
+					"Incoming": false
+				}
+			}
+		},
+		"0000000000000000000000000000000000000000000000000000000000000001": {
+			"Name": "Revoker",
+			"Endpoints": {
+				"Inst1": {
+					"IP": "0.0.0.0",
+					"Port": 10002,
+					"Incoming": true
+				}
+			}
+		},
+		"0000000000000000000000000000000000000000000000000000000000000002": {
+			"Name": "EthereumClt",
+			"Endpoints": {
+				"Inst1": {
+					"IP": "127.0.0.1",
+					"Port": 10003,
+					"Incoming": false
+				}
+			}
+		}
+	},
+	"Publisher": {
+		"Addr": "e3561e185c482ae16e56377c362c13658c36ebc6"
+	}
+}

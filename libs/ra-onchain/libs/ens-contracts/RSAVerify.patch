@@ -1,0 +1,23 @@
+--- ens-contracts/RSAVerify.883a0a2d64d07df54f3ebbb0e81cf2e9d012c14d.sol	2023-05-10 17:58:50.829460488 -0700
++++ ens-contracts/RSAVerify.sol	2023-04-27 12:32:29.516218191 -0700
+@@ -1,7 +1,9 @@
++// SPDX-License-Identifier: MIT
+ pragma solidity ^0.8.4;
+ 
+-import "../BytesUtils.sol";
+-import "./ModexpPrecompile.sol";
++
++import {ModexpPrecompile} from "./ModexpPrecompile.sol";
++
+ 
+ library RSAVerify {
+     /**
+@@ -15,7 +17,7 @@
+         bytes memory N,
+         bytes memory E,
+         bytes memory S
+-    ) internal view returns (bool, bytes memory) {
++    ) internal view returns (bytes memory) {
+         return ModexpPrecompile.modexp(S, E, N);
+     }
+ }

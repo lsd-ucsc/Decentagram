@@ -1,0 +1,38 @@
+{
+	"EnclaveImage": {
+		"ImagePath": "libProblematicApp_trusted.signed.so",
+		"TokenPath": "ProblematicApp_Enclave.token"
+	},
+	"AuthorizedComponents": {
+		"0000000000000000000000000000000000000000000000000000000000000000": {
+			"Name": "DecentServer",
+			"Endpoints": {
+				"Inst1": {
+					"IP": "127.0.0.1",
+					"Port": 10001,
+					"Incoming": false
+				}
+			}
+		},
+		"0000000000000000000000000000000000000000000000000000000000000001": {
+			"Name": "Revoker",
+			"Endpoints": {
+				"Inst1": {
+					"IP": "127.0.0.1",
+					"Port": 10002,
+					"Incoming": false
+				}
+			}
+		},
+		"0000000000000000000000000000000000000000000000000000000000000002": {
+			"Name": "EthereumClt",
+			"Endpoints": {
+				"Inst1": {
+					"IP": "127.0.0.1",
+					"Port": 10003,
+					"Incoming": false
+				}
+			}
+		}
+	}
+}

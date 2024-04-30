@@ -1,0 +1,155 @@
+--- BytesUtils.883a0a2d64d07df54f3ebbb0e81cf2e9d012c14d.sol	2023-05-10 18:54:02.896132917 -0700
++++ BytesUtils.sol	2023-05-08 02:38:06.477673524 -0700
+@@ -1,4 +1,5 @@
+-pragma solidity ^0.8.4;
++// SPDX-License-Identifier: MIT
++pragma solidity >=0.8.4;
+ 
+ library BytesUtils {
+     error OffsetOutOfBoundsError(uint256 offset, uint256 length);
+@@ -270,7 +271,7 @@
+         }
+     }
+ 
+-    function memcpy(uint256 dest, uint256 src, uint256 len) private pure {
++    function memcpyUnsafe(uint256 dest, uint256 src, uint256 len) private pure {
+         // Copy word-length chunks while possible
+         for (; len >= 32; len -= 32) {
+             assembly {
+@@ -297,7 +298,7 @@
+      * @param offset The offset to start copying at.
+      * @param len The number of bytes to copy.
+      */
+-    function substring(
++    function substringUnsafe(
+         bytes memory self,
+         uint256 offset,
+         uint256 len
+@@ -312,7 +313,98 @@
+             dest := add(ret, 32)
+             src := add(add(self, 32), offset)
+         }
+-        memcpy(dest, src, len);
++        memcpyUnsafe(dest, src, len);
++
++        return ret;
++    }
++
++    function memcpySafe(uint dest, uint src, uint len) private pure {
++        require(len % 32 == 0, "Unaligned memcpy not allowed.");
++        // Copy word-length chunks while possible
++        for (; len >= 32; len -= 32) {
++            assembly {
++                mstore(dest, mload(src))
++            }
++            dest += 32;
++            src += 32;
++        }
++    }
++
++    /*
++    * @dev Copies a substring into a new byte string.
++    * @param self The byte string to copy from.
++    * @param offset The offset to start copying at.
++    * @param len The number of bytes to copy.
++    */
++    function substringFast(
++        bytes memory self,
++        uint offset,
++        uint len
++    ) internal pure returns(bytes memory) {
++        require(offset + len <= self.length, "Invalid length");
++
++        bytes memory ret = new bytes(len);
++        uint dest;
++        uint src;
++        uint alignedLen = (len / 32) * 32;
++
++        assembly {
++            dest := add(ret, 32)
++            src := add(add(self, 32), offset)
++        }
++        memcpySafe(dest, src, alignedLen);
++
++        // copy last unaligned bytes
++        for (uint i = 0; i < len - alignedLen; i++) {
++            ret[alignedLen + i] = self[offset + alignedLen + i];
++        }
++
++        return ret;
++    }
++
++    function substrstringFast(
++        bytes memory self,
++        uint offset,
++        uint len
++    ) internal pure returns(string memory) {
++        require(offset + len <= self.length, "Invalid length");
++
++        string memory ret = new string(len);
++        uint dest;
++        uint src;
++        uint alignedLen = (len / 32) * 32;
++
++        assembly {
++            dest := add(ret, 32)
++            src := add(add(self, 32), offset)
++        }
++        memcpySafe(dest, src, alignedLen);
++
++        // copy last unaligned bytes
++        for (uint i = 0; i < len - alignedLen; i++) {
++            bytes(ret)[alignedLen + i] = self[offset + alignedLen + i];
++        }
++
++        return ret;
++    }
++
++    /*
++    * @dev Copies a substring into a new byte string.
++    * @param self The byte string to copy from.
++    * @param offset The offset to start copying at.
++    * @param len The number of bytes to copy.
++    */
++    function substringSafe(
++        bytes memory self,
++        uint offset,
++        uint len
++    ) internal pure returns(bytes memory) {
++        require(offset + len <= self.length, "Invalid length");
++
++        bytes memory ret = new bytes(len);
++        for (uint i = 0; i < len; i++) {
++            ret[i] = self[offset + i];
++        }
+ 
+         return ret;
+     }
+@@ -397,4 +489,27 @@
+         }
+         return type(uint256).max;
+     }
++
++
++    function contains(
++        bytes memory self,
++        bytes32 target
++    )
++        internal
++        pure
++        returns (bool)
++    {
++        require(self.length % 32 == 0, "Invalid length");
++        uint256 cpmRes;
++        for (uint i = 0; i < self.length; i += 32) {
++            assembly {
++                cpmRes := eq(mload(add(self, add(i, 32))), target)
++            }
++            if (cpmRes == 1) {
++                return true;
++            }
++        }
++        return false;
++    }
++
+ }

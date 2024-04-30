@@ -1,0 +1,67 @@
+// Copyright (c) 2022 DecentEnclave
+// Use of this source code is governed by an MIT-style
+// license that can be found in the LICENSE file or at
+// https://opensource.org/licenses/MIT.
+
+enclave
+{
+	untrusted
+	{
+		/* define OCALLs here. */
+
+
+		/* networking */
+
+
+		sgx_status_t ocall_decent_endpoint_connect(
+			[out] void** ptr,
+			[in, string] const char* name
+		);
+
+		void ocall_decent_ssocket_disconnect(
+			[user_check] void* ptr
+		);
+
+		sgx_status_t ocall_decent_ssocket_send_raw(
+			[user_check] void* ptr,
+			[in, size=in_buf_size] const uint8_t* in_buf,
+			size_t in_buf_size,
+			[out] size_t* out_size
+		);
+
+		sgx_status_t ocall_decent_ssocket_recv_raw(
+			[user_check] void* ptr,
+			size_t size,
+			[out] uint8_t** out_buf,
+			[out] size_t* out_buf_size
+		);
+
+		sgx_status_t ocall_decent_ssocket_async_recv_raw(
+			[user_check] void* ptr,
+			size_t size,
+			sgx_enclave_id_t enclave_id,
+			uint64_t handler_reg_id
+		);
+
+	}; // untrusted
+
+
+	trusted
+	{
+		public sgx_status_t ecall_decent_ssocket_async_recv_raw_callback(
+			uint64_t handler_reg_id,
+			[in, size=in_data_size] const uint8_t* in_data,
+			size_t in_data_size,
+			uint8_t has_error_occurred
+		);
+
+		public sgx_status_t ecall_decent_lambda_handler(
+			[user_check] void* sock_ptr
+		);
+
+		public sgx_status_t ecall_decent_heartbeat();
+
+	}; // trusted
+
+
+}; // enclave

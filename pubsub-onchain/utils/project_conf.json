@@ -1,0 +1,11 @@
+{
+	"contractModuleMap": {
+		"PubSubService"       : "PubSub",
+		"EventManager"        : "PubSub",
+		"HelloWorldPublisher" : "tests",
+		"HelloWorldSubscriber": "tests",
+		"BasicActionGasCost"  : "tests"
+	},
+	"releaseUrl": "",
+	"buildDir"  : "build"
+}

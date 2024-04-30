@@ -1,0 +1,51 @@
+{
+	"fileSrc": [
+		{
+			"file": "ens-contracts/BytesUtils.sol",
+			"src": {
+				"host": "github",
+				"repo": "ensdomains/ens-contracts",
+				"commit": "883a0a2d64d07df54f3ebbb0e81cf2e9d012c14d",
+				"path": "contracts/dnssec-oracle/BytesUtils.sol"
+			}
+		},
+		{
+			"file": "ens-contracts/ModexpPrecompile.sol",
+			"src": {
+				"host": "github",
+				"repo": "ensdomains/ens-contracts",
+				"commit": "883a0a2d64d07df54f3ebbb0e81cf2e9d012c14d",
+				"path": "contracts/dnssec-oracle/algorithms/ModexpPrecompile.sol"
+			}
+		},
+		{
+			"file": "ens-contracts/RSAVerify.sol",
+			"src": {
+				"host": "github",
+				"repo": "ensdomains/ens-contracts",
+				"commit": "883a0a2d64d07df54f3ebbb0e81cf2e9d012c14d",
+				"path": "contracts/dnssec-oracle/algorithms/RSAVerify.sol"
+			}
+		},
+
+		{
+			"file": "asn1-decode/Asn1Decode.sol",
+			"src": {
+				"host": "github",
+				"repo": "JonahGroendal/asn1-decode",
+				"commit": "5c2d1469fc678513753786acb441e597969192ec",
+				"path": "contracts/Asn1Decode.sol"
+			}
+		},
+
+		{
+			"file": "sig-verify-algs/LibRsaSha256.sol",
+			"src": {
+				"host": "github",
+				"repo": "JonahGroendal/sig-verify-algs",
+				"commit": "0f0cb83eb03075a4cf80cc0376f24ff3cc1c244f",
+				"path": "contracts/RsaSha256Algorithm.sol"
+			}
+		}
+	]
+}

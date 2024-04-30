@@ -1,0 +1,598 @@
+name: Create release
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  create_release_pubsub_onchain:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-22.04 ]
+
+        python-version: [ 3.11 ]
+        node-version: [ 18.16.0 ]
+
+        ganache-version: [ 7.9.1 ]
+
+        solc-version: [ v0.8.21 ]
+
+    env:
+      SOLC_BIN: ${{ github.workspace }}/pubsub-onchain/build/solc-static-linux
+      PROJECT_DIR: ${{ github.workspace }}/pubsub-onchain
+      SOLC_FLAGS: >-
+        --optimize --optimize-runs 200
+        --revert-strings strip
+        --via-ir
+        --overwrite
+        --base-path ${{ github.workspace }}/pubsub-onchain
+        --output-dir ${{ github.workspace }}/pubsub-onchain/build/
+      SOLC_VER_CMD: >-
+        ${{ github.workspace }}/pubsub-onchain/build/solc-static-linux
+        --version | tail -n 1 | sed -e "s/^Version: //g"
+      RELE_NOTE: ${{ github.workspace }}/pubsub-onchain/build/release_note.md
+
+    name: create-release-pubsub-onchain
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Installing Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Installing Python packages
+      run: |
+        python3 -m pip install --requirement ${PROJECT_DIR}/utils/gas_cost_eval_requirements.txt
+
+    - name: Installing Node ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    - name: Installing NPM packages
+      run: |
+        npm install -g ganache@${{ matrix.ganache-version }}
+
+    - name: Installing Solc compiler
+      run: |
+        mkdir -p $(dirname ${SOLC_BIN})
+        curl -fsSL -o ${SOLC_BIN} \
+          https://github.com/ethereum/solidity/releases/download/${{ matrix.solc-version }}/solc-static-linux
+        chmod +x ${SOLC_BIN}
+
+    - name: Compiling contracts for PubSub/EventManager.sol
+      run: |
+        ${SOLC_BIN} ${SOLC_FLAGS} --bin ${PROJECT_DIR}/PubSub/EventManager.sol
+        ${SOLC_BIN} ${SOLC_FLAGS} --abi ${PROJECT_DIR}/PubSub/EventManager.sol
+
+    - name: Compiling contracts for PubSub/PubSubService.sol
+      run: |
+        ${SOLC_BIN} ${SOLC_FLAGS} --bin ${PROJECT_DIR}/PubSub/PubSubService.sol
+        ${SOLC_BIN} ${SOLC_FLAGS} --abi ${PROJECT_DIR}/PubSub/PubSubService.sol
+
+    - name: Compiling contracts for tests/HelloWorldSubscriber.sol
+      run: |
+        ${SOLC_BIN} ${SOLC_FLAGS} --bin ${PROJECT_DIR}/tests/HelloWorldSubscriber.sol
+        ${SOLC_BIN} ${SOLC_FLAGS} --abi ${PROJECT_DIR}/tests/HelloWorldSubscriber.sol
+
+    - name: Compiling contracts for tests/HelloWorldPublisher.sol
+      run: |
+        ${SOLC_BIN} ${SOLC_FLAGS} --bin ${PROJECT_DIR}/tests/HelloWorldPublisher.sol
+        ${SOLC_BIN} ${SOLC_FLAGS} --abi ${PROJECT_DIR}/tests/HelloWorldPublisher.sol
+
+    - name: Calculating checksums of the binary
+      working-directory: ${{ env.PROJECT_DIR }}/build/
+      run: |
+        sha256sum solc-static-linux        >> checksums.txt
+        sha256sum EventManager.bin         >> checksums.txt
+        sha256sum EventManager.abi         >> checksums.txt
+        sha256sum PubSubService.bin        >> checksums.txt
+        sha256sum PubSubService.abi        >> checksums.txt
+        sha256sum HelloWorldPublisher.bin  >> checksums.txt
+        sha256sum HelloWorldPublisher.abi  >> checksums.txt
+        sha256sum HelloWorldSubscriber.bin >> checksums.txt
+        sha256sum HelloWorldSubscriber.abi >> checksums.txt
+
+    - name: Prepare binaries for gas cost evaluation
+      working-directory: ${{ env.PROJECT_DIR }}/build/
+      run: |
+        mkdir -p PubSub
+        cp EventManager.bin  PubSub/EventManager.bin
+        cp EventManager.abi  PubSub/EventManager.abi
+        cp PubSubService.bin PubSub/PubSubService.bin
+        cp PubSubService.abi PubSub/PubSubService.abi
+        mkdir -p tests
+        cp HelloWorldPublisher.bin  tests/HelloWorldPublisher.bin
+        cp HelloWorldPublisher.abi  tests/HelloWorldPublisher.abi
+        cp HelloWorldSubscriber.bin tests/HelloWorldSubscriber.bin
+        cp HelloWorldSubscriber.abi tests/HelloWorldSubscriber.abi
+
+    - name: Run publish gas cost evaluation
+      working-directory: ${{ env.PROJECT_DIR }}
+      run: |
+        python3 ${PROJECT_DIR}/tests/GasCostEvalMultiSubs.py
+
+    - name: Run subscribe gas cost evaluation
+      working-directory: ${{ env.PROJECT_DIR }}
+      run: |
+        python3 ${PROJECT_DIR}/tests/GasCostEvalMultiPubs.py
+
+    - name: Run deployment gas cost evaluation
+      working-directory: ${{ env.PROJECT_DIR }}
+      run: |
+        python3 ${PROJECT_DIR}/tests/GasCostEvalDeploy.py
+
+    - name: Plot gas cost evaluation result figures
+      working-directory: ${{ env.PROJECT_DIR }}
+      run: |
+        python3 ${PROJECT_DIR}/tests/GasCostEvalPlot.py
+
+    - name: Generate release note
+      working-directory: ${{ env.PROJECT_DIR }}/build
+      run: |
+        mkdir -p $(dirname ${RELE_NOTE})
+        echo "# Release note"                   >> ${RELE_NOTE}
+        echo "" >> ${RELE_NOTE}
+        echo "## Contracts"                     >> ${RELE_NOTE}
+        echo "- PubSub/EventManager.sol"        >> ${RELE_NOTE}
+        echo "- PubSub/PubSubService.sol"       >> ${RELE_NOTE}
+        echo "- tests/HelloWorldPublisher.sol"  >> ${RELE_NOTE}
+        echo "- tests/HelloWorldSubscriber.sol" >> ${RELE_NOTE}
+        echo "" >> ${RELE_NOTE}
+        echo "## Build configurations"                          >> ${RELE_NOTE}
+        echo "- OS: \`${{ matrix.os }}\`"                       >> ${RELE_NOTE}
+        echo "- Solc version: \`$(bash -c "${SOLC_VER_CMD}")\`" >> ${RELE_NOTE}
+        echo "- Compiler Flags: \`${SOLC_FLAGS}\`"              >> ${RELE_NOTE}
+        echo "" >> ${RELE_NOTE}
+        echo "## Checksums"       >> ${RELE_NOTE}
+        echo "\`\`\`"             >> ${RELE_NOTE}
+        cat checksums.txt         >> ${RELE_NOTE}
+        echo "\`\`\`"             >> ${RELE_NOTE}
+        echo "" >> ${RELE_NOTE}
+        echo "## Gas Cost Evaluations" >> ${RELE_NOTE}
+        echo "### Gas Cost of Publishing Events"         >> ${RELE_NOTE}
+        echo ""                                          >> ${RELE_NOTE}
+        echo '!'"[publish_gas_cost](/../../blob/assets-gas-eval/assets/${{ github.ref_name }}-publish_gas_cost.svg)"     >> ${RELE_NOTE}
+        echo ""                                          >> ${RELE_NOTE}
+        echo "### Gas Cost of Publisher Registeration"   >> ${RELE_NOTE}
+        echo ""                                          >> ${RELE_NOTE}
+        echo '!'"[register_gas_cost](/../../blob/assets-gas-eval/assets/${{ github.ref_name }}-register_gas_cost.svg)" >> ${RELE_NOTE}
+        echo ""                                          >> ${RELE_NOTE}
+        echo "### Gas Cost of Subscribing to Publishers" >> ${RELE_NOTE}
+        echo ""                                          >> ${RELE_NOTE}
+        echo '!'"[subscribe_gas_cost](/../../blob/assets-gas-eval/assets/${{ github.ref_name }}-subscribe_gas_cost.svg)" >> ${RELE_NOTE}
+        echo ""                                          >> ${RELE_NOTE}
+        echo "### Gas Cost of Contract Deployment"       >> ${RELE_NOTE}
+        echo "\`\`\`json"                                >> ${RELE_NOTE}
+        cat deploy_gas_cost.json                         >> ${RELE_NOTE}
+        echo ""                                          >> ${RELE_NOTE}
+        echo "\`\`\`"                                    >> ${RELE_NOTE}
+        echo ""                                          >> ${RELE_NOTE}
+        echo "### Gas Cost Summary"                      >> ${RELE_NOTE}
+        echo ""                                          >> ${RELE_NOTE}
+        echo '!'"[gas_cost](/../../blob/assets-gas-eval/assets/${{ github.ref_name }}-gas_cost.svg)" >> ${RELE_NOTE}
+        echo ""                                          >> ${RELE_NOTE}
+        echo "" >> ${RELE_NOTE}
+
+    - name: Echo release note
+      run: |
+        cat ${RELE_NOTE}
+
+    - name: Release for anonymous repo
+      uses: actions/upload-artifact@v3
+      with:
+        name: anonymous_repo_release_pubsub_onchain
+        path: |
+          ${{ env.PROJECT_DIR }}/build/release_note.md
+          ${{ env.PROJECT_DIR }}/build/EventManager.bin
+          ${{ env.PROJECT_DIR }}/build/EventManager.abi
+          ${{ env.PROJECT_DIR }}/build/PubSubService.bin
+          ${{ env.PROJECT_DIR }}/build/PubSubService.abi
+          ${{ env.PROJECT_DIR }}/build/HelloWorldPublisher.bin
+          ${{ env.PROJECT_DIR }}/build/HelloWorldPublisher.abi
+          ${{ env.PROJECT_DIR }}/build/HelloWorldSubscriber.bin
+          ${{ env.PROJECT_DIR }}/build/HelloWorldSubscriber.abi
+          ${{ env.PROJECT_DIR }}/build/publish_gas_cost.svg
+          ${{ env.PROJECT_DIR }}/build/publish_gas_cost.json
+          ${{ env.PROJECT_DIR }}/build/subscribe_gas_cost.svg
+          ${{ env.PROJECT_DIR }}/build/subscribe_gas_cost.json
+          ${{ env.PROJECT_DIR }}/build/register_gas_cost.svg
+          ${{ env.PROJECT_DIR }}/build/register_gas_cost.json
+          ${{ env.PROJECT_DIR }}/build/deploy_gas_cost.json
+          ${{ env.PROJECT_DIR }}/build/gas_cost.svg
+
+
+
+  create_release_ra_onchain:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-22.04 ]
+
+        python-version: [ 3.11 ]
+        node-version: [ 18.16.0 ]
+
+        ganache-version: [ 7.9.1 ]
+
+        solc-version: [ v0.8.21 ]
+
+    env:
+      SOLC_BIN: ${{ github.workspace }}/libs/ra-onchain/build/solc-static-linux
+      PROJECT_DIR: ${{ github.workspace }}/libs/ra-onchain
+      SOLC_FLAGS: >-
+        --optimize --optimize-runs 200
+        --revert-strings strip
+        --via-ir
+        --overwrite
+        --base-path ${{ github.workspace }}/libs/ra-onchain/
+        --output-dir ${{ github.workspace }}/libs/ra-onchain/build/
+      SOLC_VER_CMD: >-
+        ${{ github.workspace }}/libs/ra-onchain/build/solc-static-linux
+        --version | tail -n 1 | sed -e "s/^Version: //g"
+      RELE_NOTE: ${{ github.workspace }}/libs/ra-onchain/build/release_note.md
+
+    name: create-release-ra-onchain
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Installing Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Installing Python packages
+      run: |
+        python3 -m pip install --requirement ${PROJECT_DIR}/utils/gas_cost_eval_requirements.txt
+
+    - name: Installing Node ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    - name: Installing NPM packages
+      run: |
+        npm install -g ganache@${{ matrix.ganache-version }}
+
+    - name: Installing Solc compiler
+      run: |
+        mkdir -p $(dirname ${SOLC_BIN})
+        curl -fsSL -o ${SOLC_BIN} \
+          https://github.com/ethereum/solidity/releases/download/${{ matrix.solc-version }}/solc-static-linux
+        chmod +x ${SOLC_BIN}
+
+    - name: Compiling contracts for contracts/IASRootCertMgr.sol
+      run: |
+        ${SOLC_BIN} ${SOLC_FLAGS} --bin ${PROJECT_DIR}/contracts/IASRootCertMgr.sol
+        ${SOLC_BIN} ${SOLC_FLAGS} --abi ${PROJECT_DIR}/contracts/IASRootCertMgr.sol
+
+    - name: Compiling contracts for contracts/IASReportCertMgr.sol
+      run: |
+        ${SOLC_BIN} ${SOLC_FLAGS} --bin ${PROJECT_DIR}/contracts/IASReportCertMgr.sol
+        ${SOLC_BIN} ${SOLC_FLAGS} --abi ${PROJECT_DIR}/contracts/IASReportCertMgr.sol
+
+    - name: Compiling contracts for contracts/DecentServerCertMgr.sol
+      run: |
+        ${SOLC_BIN} ${SOLC_FLAGS} --bin ${PROJECT_DIR}/contracts/DecentServerCertMgr.sol
+        ${SOLC_BIN} ${SOLC_FLAGS} --abi ${PROJECT_DIR}/contracts/DecentServerCertMgr.sol
+
+    - name: Compiling contracts for tests/HelloWorldApp.sol
+      run: |
+        ${SOLC_BIN} ${SOLC_FLAGS} --bin ${PROJECT_DIR}/tests/HelloWorldApp.sol
+        ${SOLC_BIN} ${SOLC_FLAGS} --abi ${PROJECT_DIR}/tests/HelloWorldApp.sol
+
+    - name: Prepare binaries for gas cost evaluation
+      working-directory: ${{ env.PROJECT_DIR }}/build/
+      run: |
+        mkdir -p contracts
+        cp IASRootCertMgr.bin      contracts/IASRootCertMgr.bin
+        cp IASRootCertMgr.abi      contracts/IASRootCertMgr.abi
+        cp IASReportCertMgr.bin    contracts/IASReportCertMgr.bin
+        cp IASReportCertMgr.abi    contracts/IASReportCertMgr.abi
+        cp DecentServerCertMgr.bin contracts/DecentServerCertMgr.bin
+        cp DecentServerCertMgr.abi contracts/DecentServerCertMgr.abi
+        mkdir -p tests
+        cp HelloWorldApp.bin  tests/HelloWorldApp.bin
+        cp HelloWorldApp.abi  tests/HelloWorldApp.abi
+
+    - name: Run gas cost evaluation
+      working-directory: ${{ env.PROJECT_DIR }}
+      run: |
+        python3 ${PROJECT_DIR}/utils/GanacheContractTests.py eval
+
+    - name: Calculating checksums of the binary
+      working-directory: ${{ env.PROJECT_DIR }}/build/
+      run: |
+        sha256sum solc-static-linux        >> checksums.txt
+        sha256sum IASRootCertMgr.bin       >> checksums.txt
+        sha256sum IASRootCertMgr.abi       >> checksums.txt
+        sha256sum IASReportCertMgr.bin     >> checksums.txt
+        sha256sum IASReportCertMgr.abi     >> checksums.txt
+        sha256sum DecentServerCertMgr.bin  >> checksums.txt
+        sha256sum DecentServerCertMgr.abi  >> checksums.txt
+        sha256sum HelloWorldApp.bin        >> checksums.txt
+        sha256sum HelloWorldApp.abi        >> checksums.txt
+
+    - name: Generate release note
+      working-directory: ${{ env.PROJECT_DIR }}/build/
+      run: |
+        mkdir -p $(dirname ${RELE_NOTE})
+        echo "# Release note"                   >> ${RELE_NOTE}
+        echo "" >> ${RELE_NOTE}
+        echo "## Contracts"                         >> ${RELE_NOTE}
+        echo "- contracts/IASRootCertMgr.sol"       >> ${RELE_NOTE}
+        echo "- contracts/IASReportCertMgr.sol"     >> ${RELE_NOTE}
+        echo "- contracts/DecentServerCertMgr.sol"  >> ${RELE_NOTE}
+        echo "- tests/HelloWorldApp.sol"            >> ${RELE_NOTE}
+        echo "" >> ${RELE_NOTE}
+        echo "## Build configurations"                          >> ${RELE_NOTE}
+        echo "- OS: \`${{ matrix.os }}\`"                       >> ${RELE_NOTE}
+        echo "- Solc version: \`$(bash -c "${SOLC_VER_CMD}")\`" >> ${RELE_NOTE}
+        echo "- Compiler Flags: \`${SOLC_FLAGS}\`"              >> ${RELE_NOTE}
+        echo "" >> ${RELE_NOTE}
+        echo "## Checksums"       >> ${RELE_NOTE}
+        echo "\`\`\`"             >> ${RELE_NOTE}
+        cat checksums.txt         >> ${RELE_NOTE}
+        echo "\`\`\`"             >> ${RELE_NOTE}
+        echo "" >> ${RELE_NOTE}
+        echo "## Gas Cost Evaluations" >> ${RELE_NOTE}
+        echo "\`\`\`json"         >> ${RELE_NOTE}
+        cat gas_costs.json        >> ${RELE_NOTE}
+        echo ""                   >> ${RELE_NOTE}
+        echo "\`\`\`"             >> ${RELE_NOTE}
+        echo "" >> ${RELE_NOTE}
+
+    - name: Echo release note
+      run: |
+        cat ${RELE_NOTE}
+
+    - name: Release for anonymous repo
+      uses: actions/upload-artifact@v3
+      with:
+        name: anonymous_repo_release_ra_onchain
+        path: |
+          ${{ env.PROJECT_DIR }}/build/release_note.md
+          ${{ env.PROJECT_DIR }}/build/IASRootCertMgr.bin
+          ${{ env.PROJECT_DIR }}/build/IASRootCertMgr.abi
+          ${{ env.PROJECT_DIR }}/build/IASReportCertMgr.bin
+          ${{ env.PROJECT_DIR }}/build/IASReportCertMgr.abi
+          ${{ env.PROJECT_DIR }}/build/DecentServerCertMgr.bin
+          ${{ env.PROJECT_DIR }}/build/DecentServerCertMgr.abi
+          ${{ env.PROJECT_DIR }}/build/HelloWorldApp.bin
+          ${{ env.PROJECT_DIR }}/build/HelloWorldApp.abi
+          ${{ env.PROJECT_DIR }}/build/gas_costs.json
+
+
+
+  create_release_revoker_onchain:
+    needs: [create_release_pubsub_onchain, create_release_ra_onchain]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-22.04 ]
+
+        python-version: [ 3.11 ]
+        node-version: [ 18.16.0 ]
+
+        ganache-version: [ 7.9.1 ]
+
+        solc-version: [ v0.8.21 ]
+
+    env:
+      SOLC_BIN: ${{ github.workspace }}/revoker-onchain/build/solc-static-linux
+      PROJECT_DIR: ${{ github.workspace }}/revoker-onchain
+      SOLC_FLAGS: >-
+        --optimize --optimize-runs 200
+        --revert-strings strip
+        --via-ir
+        --overwrite
+        --allow-paths ${{ github.workspace }}
+        --base-path ${{ github.workspace }}/revoker-onchain
+        --output-dir ${{ github.workspace }}/revoker-onchain/build/
+      SOLC_VER_CMD: >-
+        ${{ github.workspace }}/revoker-onchain/build/solc-static-linux
+        --version | tail -n 1 | sed -e "s/^Version: //g"
+      RELE_NOTE: ${{ github.workspace }}/revoker-onchain/build/release_note.md
+      PUBSUB_ARTIFACT_DIR: ${{ github.workspace }}/artifact/pubsub-onchain
+      RA_ARTIFACT_DIR: ${{ github.workspace }}/artifact/ra-onchain
+
+    name: create-release-revoker-onchain
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Installing Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Installing Python packages
+      run: |
+        python3 -m pip install --requirement ${PROJECT_DIR}/utils/gas_cost_eval_requirements.txt
+
+    - name: Installing Node ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    - name: Installing NPM packages
+      run: |
+        npm install -g ganache@${{ matrix.ganache-version }}
+
+    - name: Installing Solc compiler
+      run: |
+        mkdir -p $(dirname ${SOLC_BIN})
+        curl -fsSL -o ${SOLC_BIN} \
+          https://github.com/ethereum/solidity/releases/download/${{ matrix.solc-version }}/solc-static-linux
+        chmod +x ${SOLC_BIN}
+
+    - name: Compiling contracts for EnclaveRevoker/RevokerByVoting.sol
+      run: |
+        ${SOLC_BIN} ${SOLC_FLAGS} --bin ${PROJECT_DIR}/EnclaveRevoker/RevokerByVoting.sol
+        ${SOLC_BIN} ${SOLC_FLAGS} --abi ${PROJECT_DIR}/EnclaveRevoker/RevokerByVoting.sol
+
+    - name: Compiling contracts for EnclaveRevoker/RevokerByConflictMsg.sol
+      run: |
+        ${SOLC_BIN} ${SOLC_FLAGS} --bin ${PROJECT_DIR}/EnclaveRevoker/RevokerByConflictMsg.sol
+        ${SOLC_BIN} ${SOLC_FLAGS} --abi ${PROJECT_DIR}/EnclaveRevoker/RevokerByConflictMsg.sol
+
+    - name: Compiling contracts for EnclaveRevoker/RevokerByLeakedKey.sol
+      run: |
+        ${SOLC_BIN} ${SOLC_FLAGS} --bin ${PROJECT_DIR}/EnclaveRevoker/RevokerByLeakedKey.sol
+        ${SOLC_BIN} ${SOLC_FLAGS} --abi ${PROJECT_DIR}/EnclaveRevoker/RevokerByLeakedKey.sol
+
+    - name: Compiling contracts for KeyRevoker/KeyRevokerByVoting.sol
+      run: |
+        ${SOLC_BIN} ${SOLC_FLAGS} --bin ${PROJECT_DIR}/KeyRevoker/KeyRevokerByVoting.sol
+        ${SOLC_BIN} ${SOLC_FLAGS} --abi ${PROJECT_DIR}/KeyRevoker/KeyRevokerByVoting.sol
+
+    - name: Compiling contracts for KeyRevoker/KeyRevokerByConflictMsg.sol
+      run: |
+        ${SOLC_BIN} ${SOLC_FLAGS} --bin ${PROJECT_DIR}/KeyRevoker/KeyRevokerByConflictMsg.sol
+        ${SOLC_BIN} ${SOLC_FLAGS} --abi ${PROJECT_DIR}/KeyRevoker/KeyRevokerByConflictMsg.sol
+
+    - name: Compiling contracts for KeyRevoker/KeyRevokerByLeakedKey.sol
+      run: |
+        ${SOLC_BIN} ${SOLC_FLAGS} --bin ${PROJECT_DIR}/KeyRevoker/KeyRevokerByLeakedKey.sol
+        ${SOLC_BIN} ${SOLC_FLAGS} --abi ${PROJECT_DIR}/KeyRevoker/KeyRevokerByLeakedKey.sol
+
+    - name: Calculating checksums of the binary
+      working-directory: ${{ env.PROJECT_DIR }}/build
+      run: |
+        sha256sum solc-static-linux            >> checksums.txt
+        sha256sum RevokerByVoting.bin          >> checksums.txt
+        sha256sum RevokerByVoting.abi          >> checksums.txt
+        sha256sum RevokerByConflictMsg.bin     >> checksums.txt
+        sha256sum RevokerByConflictMsg.abi     >> checksums.txt
+        sha256sum RevokerByLeakedKey.bin       >> checksums.txt
+        sha256sum RevokerByLeakedKey.abi       >> checksums.txt
+        sha256sum KeyRevokerByVoting.bin       >> checksums.txt
+        sha256sum KeyRevokerByVoting.abi       >> checksums.txt
+        sha256sum KeyRevokerByConflictMsg.abi  >> checksums.txt
+        sha256sum KeyRevokerByConflictMsg.abi  >> checksums.txt
+        sha256sum KeyRevokerByLeakedKey.abi    >> checksums.txt
+        sha256sum KeyRevokerByLeakedKey.abi    >> checksums.txt
+
+    - name: Prepare binaries for gas cost evaluation
+      working-directory: ${{ env.PROJECT_DIR }}/build
+      run: |
+        mkdir -p EnclaveRevoker
+        cp RevokerByVoting.bin       EnclaveRevoker/RevokerByVoting.bin
+        cp RevokerByVoting.abi       EnclaveRevoker/RevokerByVoting.abi
+        cp RevokerByConflictMsg.bin  EnclaveRevoker/RevokerByConflictMsg.bin
+        cp RevokerByConflictMsg.abi  EnclaveRevoker/RevokerByConflictMsg.abi
+        cp RevokerByLeakedKey.bin    EnclaveRevoker/RevokerByLeakedKey.bin
+        cp RevokerByLeakedKey.abi    EnclaveRevoker/RevokerByLeakedKey.abi
+        mkdir -p KeyRevoker
+        cp KeyRevokerByVoting.bin       KeyRevoker/KeyRevokerByVoting.bin
+        cp KeyRevokerByVoting.abi       KeyRevoker/KeyRevokerByVoting.abi
+        cp KeyRevokerByConflictMsg.bin  KeyRevoker/KeyRevokerByConflictMsg.bin
+        cp KeyRevokerByConflictMsg.abi  KeyRevoker/KeyRevokerByConflictMsg.abi
+        cp KeyRevokerByLeakedKey.bin    KeyRevoker/KeyRevokerByLeakedKey.bin
+        cp KeyRevokerByLeakedKey.abi    KeyRevoker/KeyRevokerByLeakedKey.abi
+
+    - name: Download pubsub onchain release
+      uses: actions/download-artifact@v3
+      with:
+        name: anonymous_repo_release_pubsub_onchain
+        path: ${{ env.PUBSUB_ARTIFACT_DIR }}
+
+    - name: Download ra onchain release
+      uses: actions/download-artifact@v3
+      with:
+        name: anonymous_repo_release_ra_onchain
+        path: ${{ env.RA_ARTIFACT_DIR }}
+
+    - name: List Downloaded Artifacts
+      run: |
+        ls -lah ${PUBSUB_ARTIFACT_DIR}
+        ls -lah ${RA_ARTIFACT_DIR}
+
+    - name: Install built contracts
+      working-directory: ${{ env.PROJECT_DIR }}
+      run: |
+        mkdir -p libs/PubSub/build/PubSub
+        mkdir -p libs/RA/build/contracts
+        cp ${{ env.PUBSUB_ARTIFACT_DIR }}/PubSubService.bin libs/PubSub/build/PubSub/PubSubService.bin
+        cp ${{ env.PUBSUB_ARTIFACT_DIR }}/PubSubService.abi libs/PubSub/build/PubSub/PubSubService.abi
+        cp ${{ env.RA_ARTIFACT_DIR }}/IASRootCertMgr.bin      libs/RA/build/contracts/IASRootCertMgr.bin
+        cp ${{ env.RA_ARTIFACT_DIR }}/IASRootCertMgr.abi      libs/RA/build/contracts/IASRootCertMgr.abi
+        cp ${{ env.RA_ARTIFACT_DIR }}/IASReportCertMgr.bin    libs/RA/build/contracts/IASReportCertMgr.bin
+        cp ${{ env.RA_ARTIFACT_DIR }}/IASReportCertMgr.abi    libs/RA/build/contracts/IASReportCertMgr.abi
+        cp ${{ env.RA_ARTIFACT_DIR }}/DecentServerCertMgr.bin libs/RA/build/contracts/DecentServerCertMgr.bin
+        cp ${{ env.RA_ARTIFACT_DIR }}/DecentServerCertMgr.abi libs/RA/build/contracts/DecentServerCertMgr.abi
+
+    - name: Run gas cost evaluation for EnclaveRevoker
+      working-directory: ${{ env.PROJECT_DIR }}
+      run: |
+        python3 ${PROJECT_DIR}/utils/GasEvalEnclaveRevoker.py
+
+    - name: Run gas cost evaluation for KeyRevoker
+      working-directory: ${{ env.PROJECT_DIR }}
+      run: |
+        python3 ${PROJECT_DIR}/utils/GasEvalKeyRevoker.py
+
+    - name: Generate release note
+      working-directory: ${{ env.PROJECT_DIR }}/build
+      run: |
+        echo "# Release note"                   >> ${RELE_NOTE}
+        echo "" >> ${RELE_NOTE}
+        echo "## Contracts"                             >> ${RELE_NOTE}
+        echo "- EnclaveRevoker/RevokerByVoting.sol"      >> ${RELE_NOTE}
+        echo "- EnclaveRevoker/RevokerByConflictMsg.sol" >> ${RELE_NOTE}
+        echo "- EnclaveRevoker/RevokerByLeakedKey.sol"   >> ${RELE_NOTE}
+        echo "- KeyRevoker/KeyRevokerByVoting.sol"      >> ${RELE_NOTE}
+        echo "- KeyRevoker/KeyRevokerByConflictMsg.sol" >> ${RELE_NOTE}
+        echo "- KeyRevoker/KeyRevokerByLeakedKey.sol"   >> ${RELE_NOTE}
+        echo "" >> ${RELE_NOTE}
+        echo "## Build configurations"                          >> ${RELE_NOTE}
+        echo "- OS: \`${{ matrix.os }}\`"                       >> ${RELE_NOTE}
+        echo "- Solc version: \`$(bash -c "${SOLC_VER_CMD}")\`" >> ${RELE_NOTE}
+        echo "- Compiler Flags: \`${SOLC_FLAGS}\`"              >> ${RELE_NOTE}
+        echo "" >> ${RELE_NOTE}
+        echo "## Checksums"       >> ${RELE_NOTE}
+        echo "\`\`\`"             >> ${RELE_NOTE}
+        cat checksums.txt         >> ${RELE_NOTE}
+        echo "\`\`\`"             >> ${RELE_NOTE}
+        echo "" >> ${RELE_NOTE}
+        echo "## Gas Cost Evaluations" >> ${RELE_NOTE}
+        echo "" >> ${RELE_NOTE}
+        echo "### Enclave Revoker"         >> ${RELE_NOTE}
+        echo "\`\`\`json"                 >> ${RELE_NOTE}
+        cat gas_cost_decent_revoker.json  >> ${RELE_NOTE}
+        echo ""                           >> ${RELE_NOTE}
+        echo "\`\`\`"                     >> ${RELE_NOTE}
+        echo "" >> ${RELE_NOTE}
+        echo "### Key Revoker"         >> ${RELE_NOTE}
+        echo "\`\`\`json"              >> ${RELE_NOTE}
+        cat gas_cost_key_revoker.json  >> ${RELE_NOTE}
+        echo ""                        >> ${RELE_NOTE}
+        echo "\`\`\`"                  >> ${RELE_NOTE}
+        echo "" >> ${RELE_NOTE}
+
+    - name: Echo release note
+      run: |
+        cat ${RELE_NOTE}
+
+    - name: Release for anonymous repo
+      uses: actions/upload-artifact@v3
+      with:
+        name: anonymous_repo_release_revoker_onchain
+        path: |
+          ${{ env.PROJECT_DIR }}/build/release_note.md
+          ${{ env.PROJECT_DIR }}/build/RevokerByVoting.bin
+          ${{ env.PROJECT_DIR }}/build/RevokerByVoting.abi
+          ${{ env.PROJECT_DIR }}/build/RevokerByConflictMsg.bin
+          ${{ env.PROJECT_DIR }}/build/RevokerByConflictMsg.abi
+          ${{ env.PROJECT_DIR }}/build/RevokerByLeakedKey.bin
+          ${{ env.PROJECT_DIR }}/build/RevokerByLeakedKey.abi
+          ${{ env.PROJECT_DIR }}/build/KeyRevokerByVoting.bin
+          ${{ env.PROJECT_DIR }}/build/KeyRevokerByVoting.abi
+          ${{ env.PROJECT_DIR }}/build/KeyRevokerByConflictMsg.bin
+          ${{ env.PROJECT_DIR }}/build/KeyRevokerByConflictMsg.abi
+          ${{ env.PROJECT_DIR }}/build/KeyRevokerByLeakedKey.bin
+          ${{ env.PROJECT_DIR }}/build/KeyRevokerByLeakedKey.abi
+

@@ -1,0 +1,137 @@
+<mxfile host="65bd71144e">
+    <diagram id="XnrH8_toJBjb-3jc4tlv" name="Page-1">
+        <mxGraphModel dx="951" dy="579" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="2" value="Off-chain&lt;br&gt;Oracle" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fontSize=15;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="60" width="100" height="200" as="geometry"/>
+                </mxCell>
+                <mxCell id="5" value="" style="html=1;points=[];perimeter=orthogonalPerimeter;fontSize=15;" parent="2" vertex="1">
+                    <mxGeometry x="45" y="70" width="10" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="3" value="PubSub" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fontSize=15;" parent="1" vertex="1">
+                    <mxGeometry x="200" y="60" width="100" height="200" as="geometry"/>
+                </mxCell>
+                <mxCell id="6" value="" style="html=1;points=[];perimeter=orthogonalPerimeter;fontSize=15;" parent="3" vertex="1">
+                    <mxGeometry x="45" y="70" width="10" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="4" value="Publish" style="html=1;verticalAlign=bottom;endArrow=block;entryX=0.1;entryY=0.113;entryDx=0;entryDy=0;entryPerimeter=0;exitX=1.1;exitY=0.125;exitDx=0;exitDy=0;exitPerimeter=0;fontSize=15;labelBackgroundColor=none;" parent="1" source="5" target="6" edge="1">
+                    <mxGeometry width="80" relative="1" as="geometry">
+                        <mxPoint x="100" y="140" as="sourcePoint"/>
+                        <mxPoint x="170" y="140" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="7" value="On-Chain&lt;br style=&quot;font-size: 15px;&quot;&gt;Subscriber" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fontSize=15;" parent="1" vertex="1">
+                    <mxGeometry x="360" y="60" width="100" height="200" as="geometry"/>
+                </mxCell>
+                <mxCell id="8" value="" style="html=1;points=[];perimeter=orthogonalPerimeter;fontSize=15;" parent="7" vertex="1">
+                    <mxGeometry x="45" y="70" width="10" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="28" value="calculation" style="edgeStyle=orthogonalEdgeStyle;html=1;align=left;spacingLeft=2;endArrow=block;rounded=0;fontSize=15;labelBackgroundColor=none;" parent="7" edge="1">
+                    <mxGeometry x="0.2" y="2" relative="1" as="geometry">
+                        <mxPoint x="56" y="98" as="sourcePoint"/>
+                        <Array as="points">
+                            <mxPoint x="76" y="98"/>
+                            <mxPoint x="76" y="108"/>
+                        </Array>
+                        <mxPoint x="56" y="108" as="targetPoint"/>
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="9" value="notification" style="html=1;verticalAlign=bottom;endArrow=block;entryX=0;entryY=0.25;entryDx=0;entryDy=0;entryPerimeter=0;exitX=1;exitY=0.25;exitDx=0;exitDy=0;exitPerimeter=0;fontSize=15;labelBackgroundColor=none;" parent="1" source="6" target="8" edge="1">
+                    <mxGeometry width="80" relative="1" as="geometry">
+                        <mxPoint x="106" y="150" as="sourcePoint"/>
+                        <mxPoint x="276" y="149.03999999999996" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="10" value="Off-Chain&lt;br style=&quot;font-size: 15px;&quot;&gt;Subscriber" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fontSize=15;" parent="1" vertex="1">
+                    <mxGeometry x="510" y="60" width="100" height="200" as="geometry"/>
+                </mxCell>
+                <mxCell id="11" value="" style="html=1;points=[];perimeter=orthogonalPerimeter;fontSize=15;" parent="10" vertex="1">
+                    <mxGeometry x="45" y="70" width="10" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="12" value="on-chain result" style="html=1;verticalAlign=bottom;endArrow=block;entryX=0.1;entryY=0.564;entryDx=0;entryDy=0;entryPerimeter=0;exitX=1;exitY=0.564;exitDx=0;exitDy=0;exitPerimeter=0;fontSize=15;labelBackgroundColor=none;" parent="1" edge="1">
+                    <mxGeometry x="0.0638" y="-19" width="80" relative="1" as="geometry">
+                        <mxPoint x="415" y="179.48000000000002" as="sourcePoint"/>
+                        <mxPoint x="556" y="179.48000000000002" as="targetPoint"/>
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="13" value="" style="html=1;verticalAlign=bottom;endArrow=block;exitX=1;exitY=0.979;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.979;entryDx=0;entryDy=0;entryPerimeter=0;fontSize=15;" parent="1" edge="1">
+                    <mxGeometry x="-0.5101" y="3" width="80" relative="1" as="geometry">
+                        <mxPoint x="255" y="152.52999999999997" as="sourcePoint"/>
+                        <mxPoint x="555" y="152.52999999999997" as="targetPoint"/>
+                        <mxPoint y="1" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="14" value="Off-chain&lt;br&gt;Oracle" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fontSize=15;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="310" width="100" height="200" as="geometry"/>
+                </mxCell>
+                <mxCell id="15" value="" style="html=1;points=[];perimeter=orthogonalPerimeter;fontSize=15;" parent="14" vertex="1">
+                    <mxGeometry x="45" y="70" width="10" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="16" value="Oracle Contract" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fontSize=15;" parent="1" vertex="1">
+                    <mxGeometry x="200" y="310" width="100" height="200" as="geometry"/>
+                </mxCell>
+                <mxCell id="17" value="" style="html=1;points=[];perimeter=orthogonalPerimeter;fontSize=15;" parent="16" vertex="1">
+                    <mxGeometry x="45" y="70" width="10" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="18" value="Publish" style="html=1;verticalAlign=bottom;endArrow=block;entryX=0.1;entryY=0.113;entryDx=0;entryDy=0;entryPerimeter=0;exitX=1.1;exitY=0.125;exitDx=0;exitDy=0;exitPerimeter=0;fontSize=15;" parent="1" source="15" target="17" edge="1">
+                    <mxGeometry width="80" relative="1" as="geometry">
+                        <mxPoint x="100" y="390" as="sourcePoint"/>
+                        <mxPoint x="170" y="390" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="19" value="Off-Chain&lt;br style=&quot;font-size: 15px;&quot;&gt;Subscriber" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fontSize=15;" parent="1" vertex="1">
+                    <mxGeometry x="360" y="310" width="100" height="200" as="geometry"/>
+                </mxCell>
+                <mxCell id="20" value="" style="html=1;points=[];perimeter=orthogonalPerimeter;fontSize=15;" parent="19" vertex="1">
+                    <mxGeometry x="45" y="70" width="10" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="21" value="notification" style="html=1;verticalAlign=bottom;endArrow=block;entryX=-0.1;entryY=0.138;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.9;exitY=0.125;exitDx=0;exitDy=0;exitPerimeter=0;fontSize=15;" parent="1" edge="1">
+                    <mxGeometry width="80" relative="1" as="geometry">
+                        <mxPoint x="254" y="393.25" as="sourcePoint"/>
+                        <mxPoint x="404" y="393.9000000000001" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="22" value="On-Chain&lt;br style=&quot;font-size: 15px;&quot;&gt;Subscriber" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fontSize=15;" parent="1" vertex="1">
+                    <mxGeometry x="510" y="310" width="100" height="200" as="geometry"/>
+                </mxCell>
+                <mxCell id="23" value="" style="html=1;points=[];perimeter=orthogonalPerimeter;fontSize=15;" parent="22" vertex="1">
+                    <mxGeometry x="45" y="70" width="10" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="29" value="calculation" style="edgeStyle=orthogonalEdgeStyle;html=1;align=left;spacingLeft=2;endArrow=block;rounded=0;fontSize=15;labelBackgroundColor=none;" parent="22" edge="1">
+                    <mxGeometry x="0.2" y="2" relative="1" as="geometry">
+                        <mxPoint x="55" y="95" as="sourcePoint"/>
+                        <Array as="points">
+                            <mxPoint x="75" y="95"/>
+                            <mxPoint x="75" y="105"/>
+                        </Array>
+                        <mxPoint x="55" y="105" as="targetPoint"/>
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="24" value="transaction" style="html=1;verticalAlign=bottom;endArrow=block;entryX=0;entryY=0.15;entryDx=0;entryDy=0;entryPerimeter=0;exitX=1;exitY=0.15;exitDx=0;exitDy=0;exitPerimeter=0;fontSize=15;" parent="1" edge="1">
+                    <mxGeometry width="80" relative="1" as="geometry">
+                        <mxPoint x="415" y="401.5" as="sourcePoint"/>
+                        <mxPoint x="555" y="401.5" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="30" value="on-chain result" style="html=1;verticalAlign=bottom;endArrow=block;exitX=0;exitY=0.679;exitDx=0;exitDy=0;exitPerimeter=0;fontSize=15;labelBackgroundColor=none;entryX=1;entryY=0.679;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" edge="1">
+                    <mxGeometry x="0.0769" width="80" relative="1" as="geometry">
+                        <mxPoint x="555" y="431.53" as="sourcePoint"/>
+                        <mxPoint x="415" y="431.53" as="targetPoint"/>
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="33" value="PubSub Scheme" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;dashed=1;strokeWidth=3;fontSize=15;fontColor=#0066CC;fontStyle=1" parent="1" vertex="1">
+                    <mxGeometry x="255" y="20" width="150" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="34" value="Monitor-and-React Scheme" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;dashed=1;strokeWidth=3;fontSize=15;fontColor=#0066CC;fontStyle=1" parent="1" vertex="1">
+                    <mxGeometry x="227.5" y="260" width="205" height="30" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

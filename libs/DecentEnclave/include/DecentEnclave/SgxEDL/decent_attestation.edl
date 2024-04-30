@@ -1,0 +1,54 @@
+// Copyright (c) 2022 DecentEnclave
+// Use of this source code is governed by an MIT-style
+// license that can be found in the LICENSE file or at
+// https://opensource.org/licenses/MIT.
+
+enclave
+{
+
+
+	untrusted
+	{
+		/* define OCALLs here. */
+
+		sgx_status_t ocall_decent_attest_get_extended_epid_grp_id(
+			[out]uint32_t* extGrpId
+		);
+
+
+		sgx_status_t ocall_decent_attest_get_msg1(
+			uint64_t enclave_id,
+			uint32_t ra_ctx,
+			[out] sgx_ra_msg1_t* msg1
+		);
+
+
+		sgx_status_t ocall_decent_attest_get_msg3(
+			uint64_t enclave_id,
+			uint32_t ra_ctx,
+			[in, size=msg2_size] const sgx_ra_msg2_t* msg2,
+			size_t msg2_size,
+			[out] uint8_t** out_msg3,
+			[out] size_t* out_msg3_size
+		);
+
+
+		sgx_status_t ocall_decent_attest_ias_req_get_sigrl(
+			[user_check] const void* ias_requester_ptr,
+			[in] const sgx_epid_group_id_t* gid,
+			[out] char** out_sigrl,
+			[out] size_t* out_sigrl_size
+		);
+
+
+		sgx_status_t ocall_decent_attest_ias_req_get_report(
+			[user_check] const void* ias_requester_ptr,
+			[in, string] const char* req_body,
+			[out] uint8_t** out_report,
+			[out] size_t* out_report_size
+		);
+
+	}; // untrusted
+
+
+}; // enclave

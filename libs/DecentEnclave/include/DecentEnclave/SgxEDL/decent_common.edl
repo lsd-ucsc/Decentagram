@@ -1,0 +1,24 @@
+// Copyright (c) 2022 DecentEnclave
+// Use of this source code is governed by an MIT-style
+// license that can be found in the LICENSE file or at
+// https://opensource.org/licenses/MIT.
+
+enclave
+{
+
+	trusted
+	{
+
+		public sgx_status_t ecall_enclave_common_init(
+			sgx_enclave_id_t enclave_id
+		);
+
+		public sgx_status_t ecall_decent_common_init(
+			[in, size=auth_list_size] const uint8_t* auth_list,
+			size_t auth_list_size
+		);
+
+	}; // trusted
+
+
+}; // enclave

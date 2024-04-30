@@ -1,0 +1,10 @@
+{
+	"contractModuleMap": {
+		"IASRootCertMgr"       : "contracts",
+		"IASReportCertMgr"     : "contracts",
+		"DecentServerCertMgr"  : "contracts",
+		"HelloWorldApp"        : "tests"
+	},
+	"releaseUrl": "",
+	"buildDir"  : "build"
+}
