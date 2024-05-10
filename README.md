@@ -11,7 +11,9 @@ Therefore, the source code stored **here is not being actively maintained**.
 
 ## AE Badges assigned
 
-**Code Reproducible** (subsumes both the “Reviewed” and “Available” badges)
+[***Distinguished Artifact Award at DSN 2024***](https://dsn2024uq.github.io/awards_daa.html)
+
+[**Code Reproducible**](https://dsn2024uq.github.io/reartifacts.html) (subsumes both the “**Reviewed**” and “**Available**” badges)
 
 ## Directory Structure
 
